@@ -16,7 +16,9 @@ public class Player : MonoBehaviour
     private int lives;
 
     public GameObject bullet;
+    [SerializeField] private Vector2 minMaxHeight;
 
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -43,6 +45,14 @@ public class Player : MonoBehaviour
             transform.position = new Vector3(transform.position.x * -1, transform.position.y, 0);
         }
 
+        if (transform.position.y > minMaxHeight.y)
+        {
+            transform.position = new Vector3(transform.position.x, minMaxHeight.y);
+        }
+        if (transform.position.y < minMaxHeight.x)
+        {
+            transform.position = new Vector3(transform.position.x, minMaxHeight.x);
+        }
         if (transform.position.y > 8f || transform.position.y <= -8f)
         {
             transform.position = new Vector3(transform.position.x, transform.position.y * -1, 0);
