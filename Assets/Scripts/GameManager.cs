@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 using Random = UnityEngine.Random;
 
@@ -10,43 +11,60 @@ public class GameManager : MonoBehaviour
 {
 
     public GameObject player;
-    public GameObject enemy;
+    public GameObject enemyOne;
     public GameObject cloud;
-    public GameObject coin;
+    public GameObject powerup;
 
-    private int score;
+    public AudioClip powerUp;
+    public AudioClip powerDown;
+
+    public int cloudSpeed;
+
+    private bool isPlayerAlive;
 
     public TextMeshProUGUI scoreText;
-
+    public TextMeshProUGUI gameOverText;
+    public TextMeshProUGUI restartText;
+    public TextMeshProUGUI powerupText;
+    public GameObject coin;
     [SerializeField]
     private Vector3 coinBounds;
+    private int score;
+
     // Start is called before the first frame update
     void Start()
     {
         Instantiate(player, transform.position, Quaternion.identity);
-        InvokeRepeating("CreateEnemy", 1f, 3f);
-        InvokeRepeating("CreateEnemy", 1f, 3f);
+        InvokeRepeating("CreateEnemyOne", 1f, 3f);
         InvokeRepeating("SpawnCoin", 1f, 3f);
-
+        StartCoroutine(CreatePowerup());
         CreateSky();
         score = 0;
         scoreText.text = "Score: " + score;
+        isPlayerAlive = true;
+        cloudSpeed = 1;
     }
 
     private void SpawnCoin()
     {
         Instantiate(coin, new Vector3(Random.Range(-coinBounds.x/2, coinBounds.x/2) + transform.position.x, Random.Range(-coinBounds.y/2, coinBounds.y/2) + transform.position.y, 0), Quaternion.identity);
-
+    }
+    // Update is called once per frame
+    void Update()
+    {
+        Restart();   
     }
 
-    private void OnDrawGizmosSelected()
+    void CreateEnemyOne()
     {
-        Gizmos.DrawCube(transform.position, coinBounds);
+        Instantiate(enemyOne, new Vector3(Random.Range(-9f, 9f), 7.5f, 0), Quaternion.Euler(0, 0, 180));
     }
 
-    void CreateEnemy()
+    IEnumerator CreatePowerup()
     {
-        Instantiate(enemy, new Vector3(Random.Range(-9f, 9f), 7.5f, 0), Quaternion.identity);
+        Instantiate(powerup, new Vector3(Random.Range(-9f, 9f), 7.5f, 0), Quaternion.identity);
+        yield return new WaitForSeconds(Random.Range(3f, 6f));
+        StartCoroutine(CreatePowerup());
     }
 
     void CreateSky()
@@ -57,10 +75,46 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void EarnScore(int howMuch) 
-    {  
-        score = score + howMuch;
+    public void EarnScore(int newScore)
+    {
+        score = score + newScore;
         scoreText.text = "Score: " + score;
     }
 
+    public void GameOver()
+    {
+        isPlayerAlive = false;
+        CancelInvoke();
+        gameOverText.gameObject.SetActive(true);
+        restartText.gameObject.SetActive(true);
+        cloudSpeed = 0;
+    }
+
+    void Restart()
+    {
+        if(Input.GetKeyDown(KeyCode.R) && isPlayerAlive == false)
+        {
+            SceneManager.LoadScene("Game");
+        }
+    }
+
+    public void UpdatePowerupText(string whichPowerup)
+    {
+        powerupText.text = whichPowerup;
+    }
+
+    public void PlayPowerUp()
+    {
+        AudioSource.PlayClipAtPoint(powerUp, Camera.main.transform.position);
+    }
+
+    public void PlayPowerDown()
+    {
+        AudioSource.PlayClipAtPoint(powerDown, Camera.main.transform.position);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawCube(transform.position, coinBounds);
+    }
 }
